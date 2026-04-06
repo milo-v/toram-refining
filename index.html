@@ -264,6 +264,35 @@ select:focus{border-color:var(--accent)}
   </table>
 </div>
 
+<!-- TABLE 2e -->
+<div class="card">
+  <h2>📊 Table 2e — Expected Ore: LUK (low levels) + LUK+AD (+B→+S only), Optimal Recovery</h2>
+  <div class="note">
+    Same format as 2c and 2d — each cell is the <b>per-transition cost only</b>, not cumulative. <b>Outlined border = winner for that slot.</b><br><br>
+    Models the practical strategy where you only use Anti-Deg items for the two most expensive steps (+B→+A and +A→+S), saving anti-deg costs at lower levels. Below +B, plain LUK is used. Optimal cross-char recovery applies throughout.
+  </div>
+  <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:.8em;color:var(--text2)">Pity Tier:</span>
+    <select id="pitySelect2e" onchange="renderT2e()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:.85em;outline:none;cursor:pointer"></select>
+    <span id="pityInfo2e" style="font-size:.78em;color:var(--text3)"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th class="L" rowspan="2">Transition</th>
+      <th rowspan="2" class="ht">TEC%</th>
+      <th rowspan="2" class="hl">LUK%</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">0-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
+    </tr><tr>
+      <th class="ht">TEC</th><th class="hl">LUK(+AD hi)</th>
+      <th class="ht">TEC</th><th class="hl">LUK(+AD hi)</th>
+      <th class="ht">TEC</th><th class="hl">LUK(+AD hi)</th>
+    </tr></thead>
+    <tbody id="t2e"></tbody>
+  </table>
+</div>
+
 <!-- TABLE 3 -->
 <div class="card">
   <h2>📊 Table 3 — Expected Ore: +A → +S by Pity Tier & Slot Count</h2>
@@ -535,10 +564,23 @@ function eOreExactAD(slots,lv,pity=0){
   const Et_solo=solveExactFn(srT,pd_tec,slots,pity);
   const Ead_solo=solveExactFn(srL,pd_ad,slots,pity);
   if(!Et_solo||!Ead_solo) return Infinity;
-  // E_opt_lv: min of TEC solo and LUK+AD solo at each level
-  const E_opt_lv=new Array(16).fill(0);
-  for(let k=1;k<=14;k++) E_opt_lv[k]=Math.min(Et_solo[k-1],Ead_solo[k-1]);
-  const Ead_corr=solveCorrectOptimal(srL,pd_ad,slots,pity,E_opt_lv);
+  const dist=DEG_DIST[slots];
+  function backward(sr_fn, pd){
+    const E=new Array(16).fill(0);
+    for(let k=14;k>=1;k--){
+      const p=sr_fn(k,pity)/100;
+      let extra=0;
+      dist.forEach(([drop,prob])=>{
+        const target=Math.max(k-drop,1);
+        const re_tec=Et_solo[target-1]-Et_solo[k-1];
+        const re_ad=Ead_solo[target-1]-Ead_solo[k-1];
+        extra+=prob*Math.min(re_tec,re_ad);
+      });
+      E[k]=E[k+1]+(1/p)*(1+(1-p)*pd*extra);
+    }
+    return E;
+  }
+  const Ead_corr=backward(srL,pd_ad);
   const val=Ead_corr[lv]-Ead_corr[lv+1];
   if(val<0||val>PRACTICAL_INF) return Infinity;
   return val;
@@ -582,6 +624,108 @@ function renderT2d(){
   });
 }
 renderT2d();
+
+// TABLE 2e — LUK plain for levels 1..12, LUK+AD for levels 13..14 (+B→+A, +A→+S)
+// Optimal cross-char recovery throughout.
+// The degrade chance at level k is:
+//   pDeg(slots, 255)     for k <= 12  (plain LUK)
+//   pDegLukAD(slots)     for k >= 13  (LUK+AD)
+// E_opt_lv uses min(TEC_solo, LUK_mixed_solo) at each level.
+
+function solveCorrectOptimalMixed(slots, pity){
+  // LUK mixed: plain LUK (pd_luk) for k<=12, LUK+AD (pd_ad) for k>=13.
+  // Optimal cross-char recovery: at each degrade, take the cheaper recovery path
+  // (TEC solo or LUK-mixed solo). Uses each char's OWN solo solution as the baseline
+  // so recovery extras are always >=0 (monotone), avoiding the non-monotone E_opt problem.
+  const pd_tec=pDeg(slots,0);
+  const pd_luk=pDeg(slots,255), pd_ad=pDegLukAD(slots);
+  const pd_mixed=k=>k>=13?pd_ad:pd_luk;
+  const srT=(k,p)=>srMith(k,255,p), srL=(k,p)=>srLuk(k,p);
+
+  const Et_solo=solveExactFn(srT,pd_tec,slots,pity);
+  if(!Et_solo) return null;
+
+  // LUK-mixed solo (level-dependent pd, no optimal recovery yet)
+  const dist=DEG_DIST[slots], N=14;
+  const M=Array.from({length:N},()=>Array(N+1).fill(0));
+  for(let k=1;k<=N;k++){
+    const i=k-1, p=srL(k,pity)/100, pd=pd_mixed(k);
+    M[i][i]=1-(1-p)*(1-pd);
+    if(k<N) M[i][k]-=p;
+    dist.forEach(([drop,prob])=>{ M[i][Math.max(k-drop,1)-1]-=(1-p)*pd*prob; });
+    M[i][N]=1;
+  }
+  const El_solo=gaussSolve(M,N);
+  if(!El_solo) return null;
+
+  // Backward recursion for each char.
+  // recovery extra = min over both chars of (char_solo[target-1] - char_solo[k-1])
+  // Each char's own solo is monotone decreasing, so each extra is always >= 0.
+  function backward(sr_fn, pd_fn){
+    const E=new Array(16).fill(0);
+    for(let k=14;k>=1;k--){
+      const p=sr_fn(k,pity)/100, pd=pd_fn(k);
+      let extra=0;
+      dist.forEach(([drop,prob])=>{
+        const target=Math.max(k-drop,1);
+        const re_tec=Et_solo[target-1]-Et_solo[k-1];   // always >= 0
+        const re_luk=El_solo[target-1]-El_solo[k-1];   // always >= 0
+        extra+=prob*Math.min(re_tec, re_luk);
+      });
+      E[k]=E[k+1]+(1/p)*(1+(1-p)*pd*extra);
+    }
+    return E;
+  }
+  const Et=backward(srT, ()=>pd_tec);
+  const El=backward(srL, pd_mixed);
+  return {Et, El};
+}
+
+function eOreMixed(isTec, slots, lv, pity){
+  const res=solveCorrectOptimalMixed(slots,pity);
+  if(!res) return Infinity;
+  const E=isTec?res.Et:res.El;
+  const val=E[lv]-E[lv+1];
+  if(val<0||val>PRACTICAL_INF) return Infinity;
+  return val;
+}
+
+const pitySelect2e=document.getElementById('pitySelect2e');
+for(let t=0;t<=20;t++){
+  const opt=document.createElement('option');
+  opt.value=t; opt.textContent=t===0?`Tier 0 (0 pts, base)`:`Tier ${t} (${t*150} pts, +${t}%)`;
+  pitySelect2e.appendChild(opt);
+}
+function renderT2e(){
+  const tier=+pitySelect2e.value, pts=tier*150;
+  document.getElementById('pityInfo2e').textContent=
+    `${pts} pity points · +${tier}% success · LUK plain ≤+B, LUK+AD for +B→+A and +A→+S`;
+  const tbody=document.getElementById('t2e');
+  tbody.innerHTML='';
+  STEP_LABELS.forEach(([from,to],si)=>{
+    const lv=si;
+    const tec=lv===0?100:srMith(lv,255,pts), luk=lv===0?100:srLuk(lv,pts);
+    const tr=document.createElement('tr');
+    if(si===10||si===14) tr.classList.add('div');
+    let html=`<td class="L">${from}→${to}</td>
+      <td class="ht ${srCls(tec)}">${tec.toFixed(tec%1?1:0)}%</td>
+      <td class="hl ${srCls(luk)}">${luk.toFixed(luk%1?1:0)}%</td>`;
+    [0,1,2].forEach(slots=>{
+      let eT,eL;
+      if(lv===0){eT=1;eL=1;}
+      else{
+        eT=eOreMixed(true,slots,lv,pts);
+        eL=eOreMixed(false,slots,lv,pts);
+      }
+      const w=winCls(eT,eL);
+      html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
+      html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
+    });
+    tr.innerHTML=html;
+    tbody.appendChild(tr);
+  });
+}
+renderT2e();
 
 // TABLE 2c — Per-level cost with optimal cross-char recovery
 // Same format as 2b/2d. For each level k and each char (TEC/LUK):
@@ -645,16 +789,28 @@ function solveCorrectOptimal(srFn, pd, slots, pity, E_opt_lv){
 function solveOptRecoverySystems(slots, pity){
   const pd_tec=pDeg(slots,0), pd_luk=pDeg(slots,255);
   const srT=(k,p)=>srMith(k,255,p), srL=(k,p)=>srLuk(k,p);
-  // Step 1: solo solutions (length-14 arrays, index i = level i+1)
   const Et_solo=solveExactFn(srT,pd_tec,slots,pity);
   const El_solo=solveExactFn(srL,pd_luk,slots,pity);
   if(!Et_solo||!El_solo) return null;
-  // Step 2: E_opt_lv[k] = min-cost from level k, indexed by level (1..14)
-  const E_opt_lv=new Array(16).fill(0);
-  for(let k=1;k<=14;k++) E_opt_lv[k]=Math.min(Et_solo[k-1],El_solo[k-1]);
-  // Step 3: backward recursion for each char
-  const Et=solveCorrectOptimal(srT,pd_tec,slots,pity,E_opt_lv);
-  const El=solveCorrectOptimal(srL,pd_luk,slots,pity,E_opt_lv);
+  // Use each char's own solo as monotone baseline; take min recovery at each degrade
+  function backward(sr_fn, pd){
+    const dist=DEG_DIST[slots];
+    const E=new Array(16).fill(0);
+    for(let k=14;k>=1;k--){
+      const p=sr_fn(k,pity)/100;
+      let extra=0;
+      dist.forEach(([drop,prob])=>{
+        const target=Math.max(k-drop,1);
+        const re_tec=Et_solo[target-1]-Et_solo[k-1];
+        const re_luk=El_solo[target-1]-El_solo[k-1];
+        extra+=prob*Math.min(re_tec,re_luk);
+      });
+      E[k]=E[k+1]+(1/p)*(1+(1-p)*pd*extra);
+    }
+    return E;
+  }
+  const Et=backward(srT,pd_tec);
+  const El=backward(srL,pd_luk);
   return {Et,El};
 }
 
