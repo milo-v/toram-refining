@@ -5,49 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Toram Refining Guide</title>
 <style>
+:root {
+  --bg:        #2b2d31;
+  --bg2:       #313338;
+  --bg3:       #383a40;
+  --border:    #3f4147;
+  --text:      #dbdee1;
+  --text2:     #949ba4;
+  --text3:     #5c6067;
+  --accent:    #7289da;
+  --header-bg: #1e1f22;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:        #f2f3f5;
+    --bg2:       #ffffff;
+    --bg3:       #e3e5e8;
+    --border:    #c4c9d4;
+    --text:      #313338;
+    --text2:     #5c6067;
+    --text3:     #949ba4;
+    --accent:    #5865f2;
+    --header-bg: #e3e5e8;
+  }
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#09090f;color:#ccd4f0;padding:11px;font-size:13px}
-h1{text-align:center;font-size:1.1em;color:#88b0f8;margin-bottom:3px}
-.sub{text-align:center;font-size:.68em;color:#3a4860;margin-bottom:11px}
-.card{background:#111128;border:1px solid #1e1e42;border-radius:9px;padding:10px;margin-bottom:9px}
-h2{font-size:.72em;color:#6080d8;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid #181838}
-.note{font-size:.68em;color:#4a5878;line-height:1.6;margin-bottom:5px}
-b{color:#8090bb}
-table{width:100%;border-collapse:collapse;font-size:.69em}
-th{background:#141430;color:#5060a0;padding:5px 3px;text-align:center;white-space:nowrap}
-th.L{text-align:left;padding-left:7px}
-td{padding:4px 3px;text-align:center;border-bottom:1px solid #0e0e1e}
-td.L{text-align:left;padding-left:7px;font-weight:bold;color:#a8b8e8}
-tr:hover td{background:#141432}
-tr.div td{border-top:2px solid #20204a}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:14px;font-size:14px;line-height:1.5}
+h1{text-align:center;font-size:1.25em;color:var(--accent);margin-bottom:3px;font-weight:600}
+.sub{text-align:center;font-size:.78em;color:var(--text3);margin-bottom:14px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+h2{font-size:.82em;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.note{font-size:.78em;color:var(--text3);line-height:1.6;margin-bottom:7px}
+b{color:var(--text2)}
+table{width:100%;border-collapse:collapse;font-size:.8em}
+th{background:var(--header-bg);color:var(--text2);padding:7px 5px;text-align:center;white-space:nowrap;font-weight:500}
+th.L{text-align:left;padding-left:9px}
+td{padding:6px 5px;text-align:center;border-bottom:1px solid var(--border)}
+td.L{text-align:left;padding-left:9px;font-weight:600;color:var(--text)}
+tr:hover td{background:var(--bg3)}
+tr.div td{border-top:2px solid var(--accent)}
+
 /* success rate colours */
-.sg{color:#50e890;font-weight:bold}
-.sy{color:#e8c840}
-.so{color:#e87830}
-.sr{color:#e84040}
-.sd{color:#303850;font-style:italic}
-/* cost colours — lower is better */
-.cg{color:#50e890;font-weight:bold}   /* ≤10  */
-.cy{color:#e8c840}                     /* ≤30  */
-.co{color:#e87830}                     /* ≤100 */
-.cr{color:#e84040;font-weight:bold}   /* >100 */
-.ci{color:#602020;font-style:italic}  /* ∞    */
+.sg{color:#4ade80;font-weight:600}
+.sy{color:#fbbf24}
+.so{color:#f97316}
+.sr{color:#f87171}
+.sd{color:var(--text3);font-style:italic}
+
+/* cost colours */
+.cg{color:#4ade80;font-weight:600}
+.cy{color:#fbbf24}
+.co{color:#f97316}
+.cr{color:#f87171;font-weight:600}
+.ci{color:#6b2b2b;font-style:italic}
+
 /* column shading */
-.ht{background:#0d1320}
-.hl{background:#080f0a}
-/* winner highlight */
-.wt{background:#0d1a30}  /* TEC wins this slot */
-.wl{background:#08180e}  /* LUK wins this slot */
-.we{background:#141008}  /* essentially equal  */
-.pill{display:inline-block;border-radius:8px;padding:1px 6px;font-size:.82em;font-weight:bold}
-.tec{background:#101e40;color:#60a0f8}
-.luk{background:#082010;color:#40c870}
-.eq {background:#1c1608;color:#c0a040}
-.inf{background:#1e0808;color:#e04040}
-.formula{background:#0b0b1c;border:1px solid #1a1a3a;border-radius:5px;padding:8px 10px;font-size:.68em;line-height:1.9;margin-bottom:7px}
-.formula code{color:#70b8f8;background:#12122e;border-radius:3px;padding:0 3px}
-.assume{background:#141208;border-left:3px solid #604810;padding:6px 9px;border-radius:0 5px 5px 0;font-size:.68em;color:#9a8840;line-height:1.7;margin-bottom:7px}
-.warn{font-size:.67em;color:#a06040;background:#160d08;border:1px solid #3a1808;border-radius:4px;padding:5px 8px;margin-top:5px;line-height:1.6}
+.ht{background:rgba(114,137,218,.06)}
+.hl{background:rgba(67,181,129,.06)}
+
+/* WINNER: green border instead of tint */
+.wt{outline:2px solid #5865f2;outline-offset:-2px;border-radius:3px}
+.wl{outline:2px solid #43b581;outline-offset:-2px;border-radius:3px}
+
+/* pills */
+.pill{display:inline-block;border-radius:8px;padding:2px 8px;font-size:.8em;font-weight:600}
+.tec{background:rgba(88,101,242,.2);color:#7289da}
+.luk{background:rgba(67,181,129,.2);color:#43b581}
+.eq{background:rgba(250,176,5,.15);color:#f0b232}
+
+.formula{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 13px;font-size:.78em;line-height:2;margin-bottom:9px}
+.formula code{color:#7aa2f7;background:var(--header-bg);border-radius:3px;padding:1px 5px;font-family:'Cascadia Code','Fira Mono',monospace}
+.assume{background:rgba(250,176,5,.07);border-left:3px solid #f0b232;padding:8px 11px;border-radius:0 6px 6px 0;font-size:.78em;color:var(--text2);line-height:1.7;margin-bottom:9px}
+select{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:.85em;outline:none;cursor:pointer}
+select:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -57,12 +87,12 @@ tr.div td{border-top:2px solid #20204a}
 <div class="card">
   <h2>📐 Formulas (Tier 4, all skills Lv10)</h2>
   <div class="formula">
-    <b style="color:#8898cc">Success rate (mithril ore grade=7):</b><br>
+    <b style="color:var(--text)">Success rate (mithril ore grade=7):</b><br>
     &nbsp;&nbsp;<code>diff = level × 3 − 7</code> &nbsp;→&nbsp; <code>base_val = lookup(diff)</code><br>
     &nbsp;&nbsp;<code>rate = clamp( (base_val + ⌊TEC/4⌋ + 50) × 0.85, 1, 100 ) + pity_pts/150</code><br>
     &nbsp;&nbsp;+A and +S: always floor 1% + pity_pts/150<br><br>
-    <b style="color:#8898cc">Pity:</b> mithril ore = +4 pts/attempt &nbsp;·&nbsp; 150 pts = +1% flat &nbsp;·&nbsp; ~38 attempts/tier<br><br>
-    <b style="color:#8898cc">Degrade on fail:</b> &nbsp;<code>P(degrade|fail) = 0.50 × max(0, 1 − LUK/340)</code><br>
+    <b style="color:var(--text)">Pity:</b> mithril ore = +4 pts/attempt &nbsp;·&nbsp; 150 pts = +1% flat &nbsp;·&nbsp; ~38 attempts/tier<br><br>
+    <b style="color:var(--text)">Degrade on fail:</b> &nbsp;<code>P(degrade|fail) = 0.50 × max(0, 1 − LUK/340)</code><br>
     &nbsp;&nbsp;LUK=0 (TEC): <b>50%</b> &nbsp;|&nbsp; LUK=255 alone: <b>12.5%</b> &nbsp;|&nbsp; LUK=255 + Anti-Deg item (+75% additive): <b>0%</b>
   </div>
   <div class="assume">
@@ -92,13 +122,13 @@ tr.div td{border-top:2px solid #20204a}
 <!-- TABLE 2 -->
 <div class="card">
   <h2>📊 Table 2 — Expected Ore to Advance 1 Level (Mithril Ore, pity = 0)</h2>
-  <div class="note">Each pair of columns (TEC / LUK) is for one slot count. <b>Background colour shows which is better for that slot</b> — blue tint = TEC wins, green tint = LUK wins. <span style="color:#e04040">∞</span> = divergent: expected levels lost per fail exceeds gain rate; pity required to stabilise.</div>
+  <div class="note">Each pair of columns (TEC / LUK) is for one slot count. <b>Green border = winner for that slot.</b> <span style="color:#f87171">∞</span> = divergent: expected levels lost per fail exceeds gain rate; pity required to stabilise.</div>
   <table>
     <thead><tr>
       <th class="L" rowspan="2">Level</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">0-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">1-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">2-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">0-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
     </tr><tr>
       <th class="ht">TEC</th><th class="hl">LUK</th>
       <th class="ht">TEC</th><th class="hl">LUK</th>
@@ -112,19 +142,19 @@ tr.div td{border-top:2px solid #20204a}
 <div class="card">
   <h2>📊 Table 2b — Expected Ore to Advance 1 Level, by Pity Tier (Mithril Ore)</h2>
   <div class="note">Same as Table 2 but with accumulated pity boosting success rates. Select pity tier 1–20 to see how costs shift. Pity applies equally to TEC and LUK.</div>
-  <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span style="font-size:.72em;color:#6070a0">Pity Tier:</span>
-    <select id="pitySelect" style="background:#0d0d20;border:1px solid #2a2a50;color:#c0d8ff;border-radius:5px;padding:3px 8px;font-size:.8em" onchange="renderT2b()"></select>
-    <span id="pityInfo" style="font-size:.68em;color:#4a5878"></span>
+  <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:.8em;color:var(--text2)">Pity Tier:</span>
+    <select id="pitySelect" onchange="renderT2b()"></select>
+    <span id="pityInfo" style="font-size:.78em;color:var(--text3)"></span>
   </div>
   <table>
     <thead><tr>
       <th class="L" rowspan="2">Level</th>
       <th rowspan="2" class="ht">TEC%</th>
       <th rowspan="2" class="hl">LUK%</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">0-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">1-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">2-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">0-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
     </tr><tr>
       <th class="ht">TEC</th><th class="hl">LUK</th>
       <th class="ht">TEC</th><th class="hl">LUK</th>
@@ -137,13 +167,13 @@ tr.div td{border-top:2px solid #20204a}
 <!-- TABLE 3 -->
 <div class="card">
   <h2>📊 Table 3 — Expected Ore: +A → +S by Pity Tier & Slot Count</h2>
-  <div class="note">At +A/+S both chars share the same success rate (1% + pity). The only difference is degrade. Background tint shows which is better per slot. <span style="color:#e04040">∞</span> = divergent without sufficient pity — keep refining to build pity before attempting +A→+S with TEC on slotted gear.</div>
+  <div class="note">At +A/+S both chars share the same success rate (1% + pity). The only difference is degrade. Green border = winner per slot. <span style="color:#f87171">∞</span> = divergent without sufficient pity.</div>
   <table>
     <thead><tr>
       <th rowspan="2">Pity<br>Tier</th><th rowspan="2">Points</th><th rowspan="2">Rate %</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">0-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">1-slot</th>
-      <th colspan="2" style="background:#0d1320;border-bottom:1px solid #1e1e42">2-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">0-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
     </tr><tr>
       <th class="ht">TEC</th><th class="hl">LUK</th>
       <th class="ht">TEC</th><th class="hl">LUK</th>
@@ -170,7 +200,6 @@ tr.div td{border-top:2px solid #20204a}
 </div>
 
 <script>
-// ── FORMULA ENGINE ────────────────────────────────────────────────────────
 const DIFF_MAP=[
   [-1e9,0,100],[1,3,90],[4,4,80],[5,6,70],[7,7,60],[8,8,50],[9,9,40],
   [10,10,30],[11,12,20],[13,13,10],[14,15,0],[16,16,-10],[17,18,-20],
@@ -183,7 +212,6 @@ function getBase(d){
   return -120;
 }
 function srMith(lv,tec,pity=0){
-  // Pity added after clamping so it benefits floored levels (+B, +A, +S) equally
   if(lv>=14)return Math.min(1+pity/150,99);
   const base=Math.max((getBase(lv*3-7)+Math.floor(tec/4)+50)*0.85,1);
   return Math.min(base+pity/150,100);
@@ -193,20 +221,9 @@ function srOre(lv,grade,tec=255,pity=0){
   const base=Math.max((getBase(lv*3-grade)+Math.floor(tec/4)+50)*0.85,1);
   return Math.min(base+pity/150,100);
 }
-
-// Degrade model (updated assumptions)
-// Base degrade chance: always 50% regardless of slots
-// 0s: 50% → -1 always | 1s: 50% total → 25%(-1) + 25%(-2) | 2s: ~50% → 16.7% each of -1,-2,-3
-// LUK/3.4 gives % prevention, applied multiplicatively: P(deg|fail) = 0.50 * max(0, 1 - LUK/340)
-// LUK=0: 50% | LUK=255: 0.50*(1-0.75)=12.5% | LUK=255+andeg(+75%): 0.50*max(0,0.25-0.75)=0%
 const DEG_DIST=[[1],[0.5,0.5],[1/3,1/3,1/3]];
-function pDeg(slots,luk){
-  return 0.50*Math.max(0,1-luk/340);
-}
+function pDeg(slots,luk){return 0.50*Math.max(0,1-luk/340);}
 function avgDrop(slots){return DEG_DIST[slots].reduce((s,p,i)=>s+p*(i+1),0);}
-
-// E[ore to advance 1 level] = (1/p) / (1 - (1-p)*pDeg*avgDrop)
-// If denom ≤ 0: divergent (∞)
 function eOre(p,slots,luk){
   if(p<=0)return Infinity;
   const pd=pDeg(slots,luk),ad=avgDrop(slots);
@@ -214,7 +231,6 @@ function eOre(p,slots,luk){
   if(denom<=0.001)return Infinity;
   return(1/p)/denom;
 }
-
 function fmtE(v){
   if(!isFinite(v)||v>9990)return`<span class="ci">∞</span>`;
   return v.toFixed(1);
@@ -226,16 +242,12 @@ function costCls(v){
 function srCls(v){
   if(v>=80)return'sg';if(v>=40)return'sy';if(v>1)return'so';return'sd';
 }
-
-// Per-slot winner: returns wt (TEC wins), wl (LUK wins), we (≈equal)
-// Takes precomputed eT and eL
 function winCls(eT,eL){
   if(!isFinite(eT)&&!isFinite(eL))return'we';
   if(!isFinite(eT))return'wl';
   if(!isFinite(eL))return'wt';
-  const r=eT/eL;
-  if(r<0.9)return'wt';
-  if(r>1.1)return'wl';
+  if(eT<eL)return'wt';
+  if(eL<eT)return'wl';
   return'we';
 }
 function winPill(eT,eL){
@@ -247,7 +259,7 @@ function winPill(eT,eL){
 
 const LV=['+1','+2','+3','+4','+5','+6','+7','+8','+9','+E','+D','+C','+B','+A','+S'];
 
-// ── TABLE 1 ───────────────────────────────────────────────────────────────
+// TABLE 1
 const t1=document.getElementById('t1');
 LV.forEach((nm,i)=>{
   const lv=i+1;
@@ -269,7 +281,7 @@ LV.forEach((nm,i)=>{
   t1.appendChild(tr);
 });
 
-// ── TABLE 2 ───────────────────────────────────────────────────────────────
+// TABLE 2
 const t2=document.getElementById('t2');
 LV.forEach((nm,i)=>{
   const lv=i+1;
@@ -279,15 +291,15 @@ LV.forEach((nm,i)=>{
   let html=`<td class="L">${nm}</td>`;
   [0,1,2].forEach(slots=>{
     const eT=eOre(pT,slots,0), eL=eOre(pL,slots,255);
-    const wT=winCls(eT,eL)==='wt', wL=winCls(eT,eL)==='wl';
-    html+=`<td class="ht ${costCls(eT)}${wT?' wt':''}">${fmtE(eT)}</td>`;
-    html+=`<td class="hl ${costCls(eL)}${wL?' wl':''}">${fmtE(eL)}</td>`;
+    const w=winCls(eT,eL);
+    html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
+    html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
   });
   tr.innerHTML=html;
   t2.appendChild(tr);
 });
 
-// ── TABLE 3 ───────────────────────────────────────────────────────────────
+// TABLE 3
 const t3=document.getElementById('t3');
 for(let tier=0;tier<=20;tier++){
   const pts=tier*150;
@@ -297,15 +309,15 @@ for(let tier=0;tier<=20;tier++){
   let html=`<td>${tier}</td><td>${pts}</td><td class="${rc}">${(rate*100).toFixed(0)}%</td>`;
   [0,1,2].forEach(slots=>{
     const eT=eOre(rate,slots,0), eL=eOre(rate,slots,255);
-    const wT=winCls(eT,eL)==='wt', wL=winCls(eT,eL)==='wl';
-    html+=`<td class="ht ${costCls(eT)}${wT?' wt':''}">${fmtE(eT)}</td>`;
-    html+=`<td class="hl ${costCls(eL)}${wL?' wl':''}">${fmtE(eL)}</td>`;
+    const w=winCls(eT,eL);
+    html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
+    html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
   });
   tr.innerHTML=html;
   t3.appendChild(tr);
 }
 
-// ── TABLE 2b ──────────────────────────────────────────────────────────────
+// TABLE 2b
 const pitySelect=document.getElementById('pitySelect');
 for(let t=1;t<=20;t++){
   const opt=document.createElement('option');
@@ -330,9 +342,9 @@ function renderT2b(){
       <td class="hl ${srCls(luk)}">${luk.toFixed(luk%1?1:0)}%</td>`;
     [0,1,2].forEach(slots=>{
       const eT=eOre(pT,slots,0), eL=eOre(pL,slots,255);
-      const wT=winCls(eT,eL)==='wt', wL=winCls(eT,eL)==='wl';
-      html+=`<td class="ht ${costCls(eT)}${wT?' wt':''}">${fmtE(eT)}</td>`;
-      html+=`<td class="hl ${costCls(eL)}${wL?' wl':''}">${fmtE(eL)}</td>`;
+      const w=winCls(eT,eL);
+      html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
+      html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
     });
     tr.innerHTML=html;
     tbody.appendChild(tr);
@@ -340,7 +352,7 @@ function renderT2b(){
 }
 renderT2b();
 
-// ── TABLE 4 ───────────────────────────────────────────────────────────────
+// TABLE 4
 const ORES=[
   {g:7, vals:[100,100,100,100,100,100,96,79,62,45,28,11,1,1,1]},
   {g:10,vals:[100,100,100,100,100,100,100,96,79,62,45,28,11,1,1]},
@@ -353,7 +365,7 @@ LV.forEach((nm,i)=>{
   const tr=document.createElement('tr');
   if(lv===10||lv===14)tr.classList.add('div');
   let html=`<td class="L">${nm}</td>`;
-  ORES.forEach(o=>{ const v=o.vals[i]; html+=`<td class="${srCls(v)}">${v}%</td>`; });
+  ORES.forEach(o=>{const v=o.vals[i];html+=`<td class="${srCls(v)}">${v}%</td>`;});
   tr.innerHTML=html;
   t4.appendChild(tr);
 });
