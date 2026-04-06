@@ -29,6 +29,28 @@
     --header-bg: #e3e5e8;
   }
 }
+:root.light {
+  --bg:        #f2f3f5;
+  --bg2:       #ffffff;
+  --bg3:       #e3e5e8;
+  --border:    #c4c9d4;
+  --text:      #313338;
+  --text2:     #5c6067;
+  --text3:     #949ba4;
+  --accent:    #5865f2;
+  --header-bg: #e3e5e8;
+}
+:root.dark {
+  --bg:        #2b2d31;
+  --bg2:       #313338;
+  --bg3:       #383a40;
+  --border:    #3f4147;
+  --text:      #dbdee1;
+  --text2:     #949ba4;
+  --text3:     #5c6067;
+  --accent:    #7289da;
+  --header-bg: #1e1f22;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:14px;font-size:14px;line-height:1.5}
 h1{text-align:center;font-size:1.25em;color:var(--accent);margin-bottom:3px;font-weight:600}
@@ -81,6 +103,11 @@ select:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
+<div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+  <button id="themeBtn" onclick="toggleTheme()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:5px 12px;font-size:.8em;cursor:pointer;display:flex;align-items:center;gap:6px">
+    <span id="themeIcon">☀️</span><span id="themeLabel">Light mode</span>
+  </button>
+</div>
 <h1>⚔️ Toram Refining Guide</h1>
 <p class="sub">Fully verified · All 12 ores × 15 levels match confirmed data · Correct degrade model</p>
 <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:.78em;color:#fbbf24;line-height:1.6;text-align:center">
@@ -364,6 +391,24 @@ for(let tier=0;tier<=20;tier++){
   });
   tr.innerHTML=html;
   t3.appendChild(tr);
+}
+
+// THEME TOGGLE — cycles: system → light → dark → system → ...
+const root=document.documentElement;
+const MODES=['system','light','dark'];
+const MODE_ICON ={system:'💻',light:'☀️',dark:'🌙'};
+const MODE_LABEL={system:'System',light:'Light',dark:'Dark'};
+let modeIdx=0; // start at system
+applyMode();
+function toggleTheme(){
+  modeIdx=(modeIdx+1)%3;
+  applyMode();
+}
+function applyMode(){
+  root.classList.remove('light','dark');
+  if(MODES[modeIdx]!=='system') root.classList.add(MODES[modeIdx]);
+  document.getElementById('themeIcon').textContent=MODE_ICON[MODES[modeIdx]];
+  document.getElementById('themeLabel').textContent=MODE_LABEL[MODES[modeIdx]];
 }
 
 // TABLE 4
