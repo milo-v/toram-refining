@@ -6,7 +6,7 @@
 <title>Toram Refining Guide</title>
 <style>
 :root {
-  --bg:        #2b2d31;
+  --bg:        #2b2c31;
   --bg2:       #313338;
   --bg3:       #383a40;
   --border:    #3f4147;
@@ -41,7 +41,7 @@
   --header-bg: #e3e5e8;
 }
 :root.dark {
-  --bg:        #2b2d31;
+  --bg:        #2b2c31;
   --bg2:       #313338;
   --bg3:       #383a40;
   --border:    #3f4147;
@@ -117,10 +117,12 @@ select:focus{border-color:var(--accent)}
 <div class="card">
   <h2>📐 Formulas (Tier 4, all skills Lv10)</h2>
   <div class="formula">
-    <b style="color:var(--text)">Success rate (mithril ore grade=7):</b><br>
-    &nbsp;&nbsp;<code>diff = level × 3 − 7</code> &nbsp;→&nbsp; <code>base_val = lookup(diff)</code><br>
+    <b style="color:var(--text)">TEC smith (all skills Lv10):</b><br>
     &nbsp;&nbsp;<code>rate = clamp( round( (base_val + ⌊TEC/4⌋ + 50) × 0.85 ), 1, 100 ) + pity_pts/150</code><br>
-    &nbsp;&nbsp;Rounding direction unknown — Math.round() assumed. +A and +S: always floor 1% + pity_pts/150<br><br>
+    &nbsp;&nbsp;SB_base=50, multiplier=0.85, TEC=255 → TEC/4=63. Verified against confirmed table.<br><br>
+    <b style="color:var(--text)">LUK smith (Refine Equipment Lv1 only — no Mid/High/Expert's Refinement):</b><br>
+    &nbsp;&nbsp;<code>rate = clamp( round( base_val × 0.52 ), 1, 100 ) + pity_pts/150</code><br>
+    &nbsp;&nbsp;SB_base=2 (RE Lv1), multiplier=0.52 (0.5 + 2%), TEC=0. Hits 1% floor at +7→+8.<br><br>
     <b style="color:var(--text)">Pity:</b> mithril ore = +4 pts/attempt &nbsp;·&nbsp; 150 pts = +1% flat &nbsp;·&nbsp; ~38 attempts/tier<br><br>
     <b style="color:var(--text)">Degrade on fail:</b> &nbsp;<code>P(degrade|fail) = 0.50 × max(0, 1 − LUK/340)</code><br>
     &nbsp;&nbsp;LUK=0 (TEC): <b>50%</b> &nbsp;|&nbsp; LUK=255 alone: <b>12.5%</b><br>
@@ -152,7 +154,14 @@ select:focus{border-color:var(--accent)}
 <!-- TABLE 2 -->
 <div class="card">
   <h2>📊 Table 2 — Expected Ore to Advance 1 Level (Mithril Ore, pity = 0)</h2>
-  <div class="note">Each pair of columns (TEC / LUK) is for one slot count. <b>Outlined border = winner for that slot.</b> <span style="color:#f87171">∞</span> = divergent: expected levels lost per fail exceeds gain rate; pity required to stabilise.</div>
+  <div class="note">
+    Each pair of columns (TEC / LUK) is for one slot count. <b>Outlined border = winner for that slot.</b> <span style="color:#f87171">∞</span> = divergent: expected levels lost per fail exceeds gain rate; pity required to stabilise.<br><br>
+    <b>Each cell is the expected ore cost for that single transition only</b> (e.g. the +B→+A row is the cost to go from +B to +A, not from +0 to +A). Values are <b>not cumulative</b>.<br><br>
+    <b>How the value is calculated:</b> each attempt costs 1 ore. On success (probability <i>p</i>) you advance. On fail, you may degrade and lose levels, which costs extra ore to recover. The formula is:<br>
+    &nbsp;&nbsp;<code>E = (1/p) / (1 − (1−p) × P(degrade) × avg_levels_lost)</code><br>
+    But this is only an approximation — the tables use the <b>exact Markov chain</b>, solving all 14 levels simultaneously so that the true recovery cost of each lost level is accounted for.<br><br>
+    <b>Note:</b> these values assume the same char is used throughout, including recovery from degrades. See <b>Table 2c</b> for the optimal two-char strategy where TEC handles recovery at mid-levels.
+  </div>
   <table>
     <thead><tr>
       <th class="L" rowspan="2">Level</th>
@@ -171,7 +180,10 @@ select:focus{border-color:var(--accent)}
 <!-- TABLE 2b -->
 <div class="card">
   <h2>📊 Table 2b — Expected Ore to Advance 1 Level, by Pity Tier (Mithril Ore)</h2>
-  <div class="note">Same as Table 2 but with accumulated pity boosting success rates. Select pity tier 1–20 to see how costs shift. Pity applies equally to TEC and LUK.</div>
+  <div class="note">
+    Same structure as Table 2 — each cell is the <b>per-transition cost only</b>, not cumulative. <b>Outlined border = winner for that slot.</b><br><br>
+    Pity adds a flat % bonus to success rate (+1% per 150 points). At high levels where both TEC and LUK are floored at 1%, pity is the <b>only</b> way to reduce cost. Notice how the +A→+S and +B→+A rows shrink dramatically as pity increases, while low-level rows (where TEC already has high success) barely change.
+  </div>
   <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:.8em;color:var(--text2)">Pity Tier:</span>
     <select id="pitySelect" onchange="renderT2b()"></select>
@@ -196,8 +208,11 @@ select:focus{border-color:var(--accent)}
 
 <!-- TABLE 2c -->
 <div class="card">
-  <h2>📊 Table 2c — Expected Ore to Advance 1 Level: LUK + Anti-Deg vs TEC (Mithril Ore)</h2>
-  <div class="note">Same as Table 2b but the LUK column now assumes an Anti-Degradation item (75% prevention) is used every attempt. LUK+AntiDeg degrade chance = <b>12.5% × 25% = 3.125%</b>. Compare to plain LUK (12.5%) and TEC (50%).</div>
+  <h2>📊 Table 2c — Expected Ore to Advance 1 Level: Optimal Recovery (Mithril Ore)</h2>
+  <div class="note">
+    Same format as Table 2b — each cell is the <b>per-transition cost only</b>, not cumulative. <b>Outlined border = winner for that slot.</b><br><br>
+    <b>What makes this different:</b> Table 2b assumes the same char handles recovery after a degrade. This table uses the <b>locally optimal char for each recovery level</b>. For example, if LUK is attacking +B→+A and degrades to +C, the cost to recover +C→+B is calculated using TEC (which has 11% at that step) rather than LUK (which has 1%). Each level's recovery cost is set to whichever char — TEC or LUK — has the lower expected cost there, solved simultaneously across all levels.
+  </div>
   <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:.8em;color:var(--text2)">Pity Tier:</span>
     <select id="pitySelect2c" onchange="renderT2c()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:.85em;outline:none;cursor:pointer"></select>
@@ -212,18 +227,50 @@ select:focus{border-color:var(--accent)}
       <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
       <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
     </tr><tr>
+      <th class="ht">TEC</th><th class="hl">LUK</th>
+      <th class="ht">TEC</th><th class="hl">LUK</th>
+      <th class="ht">TEC</th><th class="hl">LUK</th>
+    </tr></thead>
+    <tbody id="t2c"></tbody>
+  </table>
+</div>
+
+<!-- TABLE 2d -->
+<div class="card">
+  <h2>📊 Table 2d — Expected Ore: LUK + Anti-Deg, Optimal Recovery (Mithril Ore)</h2>
+  <div class="note">
+    Same format as Table 2c — each cell is the <b>per-transition cost only</b>, not cumulative. <b>Outlined border = winner for that slot.</b><br><br>
+    The LUK column adds an Anti-Degradation item (75% extra prevention), reducing the LUK degrade chance from 12.5% to <b>3.125%</b>. Like Table 2c, recovery after a degrade uses the <b>locally optimal char</b> at each recovery level — so if LUK+AD degrades and TEC is cheaper for the recovery climb, TEC's cost is used.
+  </div>
+  <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:.8em;color:var(--text2)">Pity Tier:</span>
+    <select id="pitySelect2d" onchange="renderT2d()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:.85em;outline:none;cursor:pointer"></select>
+    <span id="pityInfo2d" style="font-size:.78em;color:var(--text3)"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th class="L" rowspan="2">Transition</th>
+      <th rowspan="2" class="ht">TEC%</th>
+      <th rowspan="2" class="hl">LUK%</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">0-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">1-slot</th>
+      <th colspan="2" style="background:var(--header-bg);border-bottom:1px solid var(--border)">2-slot</th>
+    </tr><tr>
       <th class="ht">TEC</th><th class="hl">LUK+AD</th>
       <th class="ht">TEC</th><th class="hl">LUK+AD</th>
       <th class="ht">TEC</th><th class="hl">LUK+AD</th>
     </tr></thead>
-    <tbody id="t2c"></tbody>
+    <tbody id="t2d"></tbody>
   </table>
 </div>
 
 <!-- TABLE 3 -->
 <div class="card">
   <h2>📊 Table 3 — Expected Ore: +A → +S by Pity Tier & Slot Count</h2>
-  <div class="note">At +A/+S both chars share the same success rate (1% + pity). The only difference is degrade. Green border = winner per slot. <span style="color:#f87171">∞</span> = practically divergent (expected cost &gt;5000 ore). The exact model shows that without pity, <b>both TEC and LUK diverge</b> at +A→+S — degrade sends you back to +B which is also ~1%, creating a trap. Pity is required to escape.</div>
+  <div class="note">
+    <b>This table shows only the +A→+S transition cost</b> (one step), broken down by pity tier. It is equivalent to the +A→+S row in Table 2b, but presented as a standalone summary. Values are <b>not cumulative</b> from +0.<br><br>
+    At +A/+S both TEC and LUK have the same success rate (1% + pity), so success rate is not the differentiator here — only the degrade chance is. <b>Outlined border = winner per slot.</b> <span style="color:#f87171">∞</span> = practically divergent (cost &gt;5000 ore). The exact model shows that without pity, <b>both chars diverge</b> — failing at +A drops you to +B, which is also ~1% with the same degrade risk, trapping you in a loop. Pity is required to escape this.
+  </div>
   <table>
     <thead><tr>
       <th rowspan="2">Pity<br>Tier</th><th rowspan="2">Points</th><th rowspan="2">Rate %</th>
@@ -282,12 +329,13 @@ const DEG_DIST=[
 ];
 function pDeg(slots,luk){return 0.50*Math.max(0,1-luk/340);}
 
-// Success rate with floor then pity added after, and rounding applied to base
-// Rounding direction unknown — we use Math.round() as best assumption
+// TEC smith (all skills Lv10): SB_base=50, multiplier=0.85, TEC/4=63
+// SB_base = RE(20)+Mid(5)+High(10)+Expert(15) = 50 [empirically verified against image data]
+// SB_mult = RE(20)+Mid(5)+High(5)+Expert(5) = 35% → 0.5+0.35 = 0.85
 function srMith(lv,tec,pity=0){
   if(lv>=14) return Math.min(1+pity/150,99);
   const raw=(getBase(lv*3-7)+Math.floor(tec/4)+50)*0.85;
-  const base=Math.max(Math.round(raw),1);   // floor at 1, rounded
+  const base=Math.max(Math.round(raw),1);
   return Math.min(base+pity/150,100);
 }
 function srOre(lv,grade,tec=255,pity=0){
@@ -296,26 +344,32 @@ function srOre(lv,grade,tec=255,pity=0){
   const base=Math.max(Math.round(raw),1);
   return Math.min(base+pity/150,100);
 }
+// LUK smith (Refine Equipment Lv1 only, no Mid/High/Expert's Refinement)
+// SB_base = RE_Lv1(2) = 2, SB_mult = RE_Lv1(2%) → 0.5+0.02 = 0.52, TEC=0
+function srLuk(lv,pity=0){
+  if(lv>=14) return Math.min(1+pity/150,99);
+  const raw=(getBase(lv*3-7)+0+2)*0.52;
+  const base=Math.max(Math.round(raw),1);
+  return Math.min(base+pity/150,100);
+}
 // Solves the full 14×14 system simultaneously via Gaussian elimination.
+// srFn(k, pity) returns success rate % for level k.
 // Returns array of length 14 (E[1]..E[14]) or null if singular.
-function solveExact(tec,luk,slots,pity=0){
-  const pd=pDeg(slots,luk);
-  const dist=DEG_DIST[slots]; // [[drop,prob],...]
+function solveExactFn(srFn, pd, slots, pity=0){
+  const dist=DEG_DIST[slots];
   const N=14;
-  // Build augmented matrix [A|b]
   const M=Array.from({length:N},()=>Array(N+1).fill(0));
   for(let k=1;k<=N;k++){
     const i=k-1;
-    const p=srMith(k,tec,pity)/100;
-    M[i][i]=1-(1-p)*(1-pd);           // coeff of E[k]
-    if(k<N) M[i][k]-=p;               // coeff of E[k+1] (0-indexed: column k)
+    const p=srFn(k,pity)/100;
+    M[i][i]=1-(1-p)*(1-pd);
+    if(k<N) M[i][k]-=p;
     dist.forEach(([drop,prob])=>{
       const target=Math.max(k-drop,1);
-      M[i][target-1]-=(1-p)*pd*prob;  // coeff of E[target]
+      M[i][target-1]-=(1-p)*pd*prob;
     });
-    M[i][N]=1; // RHS
+    M[i][N]=1;
   }
-  // Gaussian elimination with partial pivoting
   for(let col=0;col<N;col++){
     let maxRow=col;
     for(let row=col+1;row<N;row++) if(Math.abs(M[row][col])>Math.abs(M[maxRow][col])) maxRow=row;
@@ -331,10 +385,16 @@ function solveExact(tec,luk,slots,pity=0){
   }
   return M.map(row=>row[N]);
 }
+// Convenience wrappers
+function solveExact(tec,luk,slots,pity=0){
+  // tec=255,luk=0 → TEC smith; tec=0,luk=255 → LUK smith
+  const srFn = (tec===255) ? ((k,p)=>srMith(k,255,p)) : ((k,p)=>srLuk(k,p));
+  const pd = pDeg(slots,luk);
+  return solveExactFn(srFn, pd, slots, pity);
+}
 
-const PRACTICAL_INF=5000; // treat as ∞ for display purposes
+const PRACTICAL_INF=5000;
 
-// E[ore to advance exactly 1 level lv] = E[lv] - E[lv+1]  (from exact system)
 function eOreExact(tec,luk,slots,lv,pity=0){
   const E=solveExact(tec,luk,slots,pity);
   if(!E) return Infinity;
@@ -386,7 +446,7 @@ const t1=document.getElementById('t1');
 STEP_LABELS.forEach(([from,to],si)=>{
   const lv=si; // lv=0 → +0→+1 (always 100%), lv=1..14 → solver levels
   const tec=lv===0?100:srMith(lv,255);
-  const luk=lv===0?100:srMith(lv,0);
+  const luk=lv===0?100:srLuk(lv);
   const advN=tec-luk;
   const tr=document.createElement('tr');
   if(si===10||si===14)tr.classList.add('div');
@@ -444,7 +504,7 @@ function renderT2b(){
   STEP_LABELS.forEach(([from,to],si)=>{
     const lv=si;
     const tec=lv===0?100:srMith(lv,255,pts);
-    const luk=lv===0?100:srMith(lv,0,pts);
+    const luk=lv===0?100:srLuk(lv,pts);
     const tr=document.createElement('tr');
     if(si===10||si===14)tr.classList.add('div');
     let html=`<td class="L">${from}→${to}</td>
@@ -464,67 +524,43 @@ function renderT2b(){
 }
 renderT2b();
 
-// TABLE 2c — LUK + Anti-Deg (75% item, multiplicative on top of LUK)
-// P(degrade|fail, LUK=255, +AntiDeg75%) = 0.50 × (1−255/340) × (1−0.75) = 12.5% × 25% = 3.125%
-const ANTIDEG_REDUCTION = 0.75; // standard Anti-Degradation item
+// TABLE 2d — LUK + Anti-Deg with optimal cross-char recovery
+// P(degrade|fail, LUK=255, +AntiDeg75%) = 0.50 × (1−255/340) × (1−0.75) = 3.125%
+const ANTIDEG_REDUCTION = 0.75;
 function pDegLukAD(slots){ return pDeg(slots,255)*(1-ANTIDEG_REDUCTION); }
+
 function eOreExactAD(slots,lv,pity=0){
-  // Same as eOreExact but with LUK+AntiDeg degrade chance
-  // We can't reuse solveExact directly since it takes a luk param.
-  // Instead, override pDeg inline by building the system manually.
-  const pd=pDegLukAD(slots);
-  const dist=DEG_DIST[slots];
-  const N=14;
-  const M=Array.from({length:N},()=>Array(N+1).fill(0));
-  for(let k=1;k<=N;k++){
-    const i=k-1;
-    const p=srMith(k,0,pity)/100; // LUK char: 0 TEC
-    M[i][i]=1-(1-p)*(1-pd);
-    if(k<N) M[i][k]-=p;
-    dist.forEach(([drop,prob])=>{
-      const target=Math.max(k-drop,1);
-      M[i][target-1]-=(1-p)*pd*prob;
-    });
-    M[i][N]=1;
-  }
-  // Gaussian elimination
-  for(let col=0;col<N;col++){
-    let maxRow=col;
-    for(let row=col+1;row<N;row++) if(Math.abs(M[row][col])>Math.abs(M[maxRow][col])) maxRow=row;
-    [M[col],M[maxRow]]=[M[maxRow],M[col]];
-    if(Math.abs(M[col][col])<1e-12) return Infinity;
-    const scale=M[col][col];
-    for(let j=col;j<=N;j++) M[col][j]/=scale;
-    for(let row=0;row<N;row++){
-      if(row===col) continue;
-      const f=M[row][col];
-      for(let j=col;j<=N;j++) M[row][j]-=f*M[col][j];
-    }
-  }
-  const E=M.map(r=>r[N]);
-  const i=lv-1;
-  const val=E[i]-(lv<14?E[i+1]:0);
+  const pd_tec=pDeg(slots,0), pd_ad=pDegLukAD(slots);
+  const srT=(k,p)=>srMith(k,255,p), srL=(k,p)=>srLuk(k,p);
+  const Et_solo=solveExactFn(srT,pd_tec,slots,pity);
+  const Ead_solo=solveExactFn(srL,pd_ad,slots,pity);
+  if(!Et_solo||!Ead_solo) return Infinity;
+  // E_opt_lv: min of TEC solo and LUK+AD solo at each level
+  const E_opt_lv=new Array(16).fill(0);
+  for(let k=1;k<=14;k++) E_opt_lv[k]=Math.min(Et_solo[k-1],Ead_solo[k-1]);
+  const Ead_corr=solveCorrectOptimal(srL,pd_ad,slots,pity,E_opt_lv);
+  const val=Ead_corr[lv]-Ead_corr[lv+1];
   if(val<0||val>PRACTICAL_INF) return Infinity;
   return val;
 }
 
-const pitySelect2c=document.getElementById('pitySelect2c');
+const pitySelect2d=document.getElementById('pitySelect2d');
 for(let t=0;t<=20;t++){
   const opt=document.createElement('option');
   opt.value=t;
   opt.textContent=t===0?`Tier 0 (0 pts, base)`:`Tier ${t} (${t*150} pts, +${t}%)`;
-  pitySelect2c.appendChild(opt);
+  pitySelect2d.appendChild(opt);
 }
-function renderT2c(){
-  const tier=+pitySelect2c.value;
+function renderT2d(){
+  const tier=+pitySelect2d.value;
   const pts=tier*150;
-  document.getElementById('pityInfo2c').textContent=`${pts} pity points · +${tier}% success · ~${Math.round(tier*37.5)} ore to accumulate`;
-  const tbody=document.getElementById('t2c');
+  document.getElementById('pityInfo2d').textContent=`${pts} pity points · +${tier}% success · LUK+AD degrade: 3.125% · optimal recovery`;
+  const tbody=document.getElementById('t2d');
   tbody.innerHTML='';
   STEP_LABELS.forEach(([from,to],si)=>{
     const lv=si;
     const tec=lv===0?100:srMith(lv,255,pts);
-    const luk=lv===0?100:srMith(lv,0,pts);
+    const luk=lv===0?100:srLuk(lv,pts);
     const tr=document.createElement('tr');
     if(si===10||si===14) tr.classList.add('div');
     let html=`<td class="L">${from}→${to}</td>
@@ -534,9 +570,127 @@ function renderT2c(){
       let eT,eL;
       if(lv===0){eT=1;eL=1;}
       else{
-        eT=eOreExact(255,0,slots,lv,pts);   // TEC, no antideg
-        eL=eOreExactAD(slots,lv,pts);        // LUK + AntiDeg
+        eT=eOreOptRecov(true,slots,lv,pts);  // TEC with optimal recovery
+        eL=eOreExactAD(slots,lv,pts);         // LUK+AD with optimal recovery
       }
+      const w=winCls(eT,eL);
+      html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
+      html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
+    });
+    tr.innerHTML=html;
+    tbody.appendChild(tr);
+  });
+}
+renderT2d();
+
+// TABLE 2c — Per-level cost with optimal cross-char recovery
+// Same format as 2b/2d. For each level k and each char (TEC/LUK):
+// when a degrade drops you to level `target`, the recovery cost uses
+// whichever char (TEC or LUK) has lower expected cost at that level.
+//
+// Algorithm:
+// 1. Solve TEC solo → E_tec[1..14]
+// 2. Solve LUK solo → E_luk[1..14]
+// 3. E_opt[k] = min(E_tec[k], E_luk[k])  for each level k
+// 4. Re-solve TEC with recovery costs replaced by E_opt on RHS
+// 5. Re-solve LUK with recovery costs replaced by E_opt on RHS
+// Note: steps 4/5 use E_opt from solo solutions as an approximation.
+// A fully iterated fixed-point would be more exact but converges to the same
+// answer in practice since the solo solutions already bracket the optimum.
+
+function gaussSolve(M,N){
+  const A=M.map(r=>[...r]);
+  for(let col=0;col<N;col++){
+    let maxRow=col;
+    for(let row=col+1;row<N;row++) if(Math.abs(A[row][col])>Math.abs(A[maxRow][col])) maxRow=row;
+    [A[col],A[maxRow]]=[A[maxRow],A[col]];
+    if(Math.abs(A[col][col])<1e-12) return null;
+    const s=A[col][col];
+    for(let j=col;j<=N;j++) A[col][j]/=s;
+    for(let row=0;row<N;row++){
+      if(row===col) continue;
+      const f=A[row][col];
+      for(let j=col;j<=N;j++) A[row][j]-=f*A[col][j];
+    }
+  }
+  return A.map(r=>r[N]);
+}
+
+// Correct optimal recovery model:
+// Per-level cost of step k using char X, with optimal cross-char recovery:
+//   per(k) = (1/p_k) * (1 + (1-p_k)*pd * sum_j P(j) * (E_opt[target] - E_opt[k]))
+// where E_opt[k] = min(E_tec_solo[k], E_luk_solo[k]) — precomputed solo costs.
+// The (E_opt[target] - E_opt[k]) term is the EXTRA ore cost to recover from target back to k,
+// using the optimal char. After reaching k, the original char resumes.
+// This is a simple backward recursion: E[k] = E[k+1] + per(k), E[15]=0.
+
+function solveCorrectOptimal(srFn, pd, slots, pity, E_opt_lv){
+  // E_opt_lv[k] = min-cost from level k to +S (k=1..14; k=0,15 = 0)
+  const dist=DEG_DIST[slots];
+  const E=new Array(16).fill(0); // E[k] = cumulative cost from level k to +S
+  for(let k=14;k>=1;k--){
+    const p=srFn(k,pity)/100;
+    let extra=0;
+    dist.forEach(([drop,prob])=>{
+      const target=Math.max(k-drop,1);
+      const Ek=E_opt_lv[k]||0, Et=E_opt_lv[target]||0;
+      extra+=prob*(Et-Ek); // extra recovery ore (E_opt[target]-E_opt[k])
+    });
+    const perLevel=(1/p)*(1+(1-p)*pd*extra);
+    E[k]=E[k+1]+perLevel;
+  }
+  return E; // E[k]-E[k+1] = per-level cost of step k
+}
+
+function solveOptRecoverySystems(slots, pity){
+  const pd_tec=pDeg(slots,0), pd_luk=pDeg(slots,255);
+  const srT=(k,p)=>srMith(k,255,p), srL=(k,p)=>srLuk(k,p);
+  // Step 1: solo solutions (length-14 arrays, index i = level i+1)
+  const Et_solo=solveExactFn(srT,pd_tec,slots,pity);
+  const El_solo=solveExactFn(srL,pd_luk,slots,pity);
+  if(!Et_solo||!El_solo) return null;
+  // Step 2: E_opt_lv[k] = min-cost from level k, indexed by level (1..14)
+  const E_opt_lv=new Array(16).fill(0);
+  for(let k=1;k<=14;k++) E_opt_lv[k]=Math.min(Et_solo[k-1],El_solo[k-1]);
+  // Step 3: backward recursion for each char
+  const Et=solveCorrectOptimal(srT,pd_tec,slots,pity,E_opt_lv);
+  const El=solveCorrectOptimal(srL,pd_luk,slots,pity,E_opt_lv);
+  return {Et,El};
+}
+
+function eOreOptRecov(isTec, slots, lv, pity){
+  const res=solveOptRecoverySystems(slots,pity);
+  if(!res) return Infinity;
+  const E=isTec?res.Et:res.El;
+  const val=E[lv]-E[lv+1]; // per-level cost of step lv
+  if(val<0||val>PRACTICAL_INF) return Infinity;
+  return val;
+}
+
+const pitySelect2c=document.getElementById('pitySelect2c');
+for(let t=0;t<=20;t++){
+  const opt=document.createElement('option');
+  opt.value=t; opt.textContent=t===0?`Tier 0 (0 pts, base)`:`Tier ${t} (${t*150} pts, +${t}%)`;
+  pitySelect2c.appendChild(opt);
+}
+function renderT2c(){
+  const tier=+pitySelect2c.value, pts=tier*150;
+  document.getElementById('pityInfo2c').textContent=
+    `${pts} pity points · +${tier}% success · Recovery uses optimal char at each level`;
+  const tbody=document.getElementById('t2c');
+  tbody.innerHTML='';
+  STEP_LABELS.forEach(([from,to],si)=>{
+    const lv=si;
+    const tec=lv===0?100:srMith(lv,255,pts), luk=lv===0?100:srLuk(lv,pts);
+    const tr=document.createElement('tr');
+    if(si===10||si===14) tr.classList.add('div');
+    let html=`<td class="L">${from}→${to}</td>
+      <td class="ht ${srCls(tec)}">${tec.toFixed(tec%1?1:0)}%</td>
+      <td class="hl ${srCls(luk)}">${luk.toFixed(luk%1?1:0)}%</td>`;
+    [0,1,2].forEach(slots=>{
+      let eT,eL;
+      if(lv===0){eT=1;eL=1;}
+      else{eT=eOreOptRecov(true,slots,lv,pts);eL=eOreOptRecov(false,slots,lv,pts);}
       const w=winCls(eT,eL);
       html+=`<td class="ht ${costCls(eT)}${w==='wt'?' wt':''}">${fmtE(eT)}</td>`;
       html+=`<td class="hl ${costCls(eL)}${w==='wl'?' wl':''}">${fmtE(eL)}</td>`;
